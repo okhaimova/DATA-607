@@ -1,0 +1,53 @@
+---
+title: "Week 1 Assignment"
+author: "Orli Khaimova"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+```
+
+## A Handful Of Cities Are Driving 2016’s Rise In Murders
+
+### Overview
+
+In 2016, there was preliminary evidence that showed that the number of murders for 2016 rose by over 10 percent by October of that year. It rose by 10.8 percent prior to that year, which was a large increase. This data was collected prior to the FBI releasing the official data and came from multiple sources for large cities where the population is greater that 250,000. It is important to note that the murders for the year of 2016 do not account for the entire year. The link to the article can be found [here](https://fivethirtyeight.com/features/a-handful-of-cities-are-driving-2016s-rise-in-murders/).
+
+```{r}
+URL <- "https://raw.githubusercontent.com/fivethirtyeight/data/master/murder_2016/murder_2016_prelim.csv"
+murders <- read.csv(URL)
+
+## preview of variables
+str(murders) 
+
+## removing variables
+murders <- subset(murders, select = -c(source, as_of))
+
+## renaming variables
+murders <- rename(murders,c("murders2015" = "X2015_murders", "murders2016" = "X2016_murders"))
+
+## changing the change variable to reflect a percent in change
+murders$change <- ifelse(murders$murders2015 == 0, round(murders$change  * 100, 2), 
+                         round(murders$change / murders$murders2015 * 100, 2))
+
+
+## Top 10 cities with the largest change in percent
+head(murders[order(-murders$change), ], 10)
+
+## Top 10 cities with the largest amount of murders
+head(murders[order(-murders$murders2016), ], 10)
+
+(sum(murders$murders2016) - sum(murders$murders2015)) / sum(murders$murders2015) * 100
+
+## Subsetting further to view where more murders than 50 murders occured
+mdf <- subset(murders, murders2016 >= 50)
+
+## Top 10 cities with the largest change in percent in mdf
+head(mdf[order(-mdf$change), ], 10)
+
+(sum(mdf$murders2016) - sum(mdf$murders2015)) / sum(mdf$murders2015) * 100
+```
+### Findings and Recommendations
+One recommendation would be to recollect the data in order to reflect the number of murders that happened in total for the year of 2016. There are some cities that more than doubled their murder rates, however, it can be beneficial to look at how the cities with the larger amounts of murders contributed to the yearly murder statistic. Overall, the data does seem to contribute to the author's claim that amount of murders increase by over ten percent. It is also interesting to see that the cities that had more murders, contributed to the increased rate.
