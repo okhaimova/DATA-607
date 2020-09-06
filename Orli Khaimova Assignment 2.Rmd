@@ -1,0 +1,59 @@
+---
+title: "Assignment 2"
+author: "Orli Khaimova"
+date: "9/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#install.packages("RMySQL")
+```
+
+```{r}
+library(RMySQL)
+library(dplyr)
+```
+### Libraries Used
+I used the *RMySQL* and *dplyr* libraries to incorporate MySQL and to perform other functions.
+
+```{r mysql setup}
+db <- dbConnect(MySQL(), user='root', password=.rs.askForPassword("Enter password:"), 
+                dbname='movies', host='localhost')
+
+summary(db)
+
+#lists the tables in the database
+dbListTables(db)
+
+#assigning variables to each table
+responders <- dbReadTable(db, "responders")
+ratings <- dbReadTable(db, "ratings")
+```
+### MySQL Setup
+First, I set up the connection to the database. Instead of writing the password, I programmed it so that it would instead prompt the user to enter the password. This way the password is not shared when others are viewing. I assigned the two different tables to different variables so that it would be use to refer to later. Strangely, when I set it up to load from file, "\r" was added to each name.
+
+```{r table making}
+#merging the two tables
+MovieRatings <- left_join(responders, ratings, by = c("responder_id" = "survey_id"))
+
+## removing the id variable
+MovieRatings <- subset(MovieRatings, select = -c(responder_id))
+
+## renaming variable
+MovieRatings <- rename(MovieRatings, "name" = "responder")
+
+MovieRatings
+```
+### Table Making
+I merged the two tables by using a left join. I removed the `id` variable so that it would be easier to view. I also removed the id variable and renamed another variable. 
+
+```{r analysis}
+summary(MovieRatings)
+
+MovieRatings %>% summarize_if(is.numeric, mean, na.rm = TRUE) 
+```
+
+### Short Analysis
+Based on these results, Joker had the highest ratings with Cats having the least. 
