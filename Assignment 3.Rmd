@@ -1,0 +1,122 @@
+---
+title: "Assignment 3"
+author: "Orli Khaimova"
+date: "9/12/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+### Problem 1
+
+Using the 173 majors listed in fivethirtyeight.com’s [College Majors dataset] (https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/), provide code that identifies the majors that contain either "DATA" or "STATISTICS"
+
+```{r}
+URL <- "https://raw.githubusercontent.com/fivethirtyeight/data/master/college-majors/majors-list.csv"
+majors <- read.csv(URL)
+
+majors %>% filter(str_detect(Major, "(DATA)|(STATISTICS)"))
+```
+
+
+### Problem 2
+
+Write code that transforms the data below:
+
+[1] "bell pepper"  "bilberry"     "blackberry"   "blood orange"
+
+[5] "blueberry"    "cantaloupe"   "chili pepper" "cloudberry"  
+
+[9] "elderberry"   "lime"         "lychee"       "mulberry"    
+
+[13] "olive"        "salal berry"
+
+Into a format like this:
+
+c("bell pepper", "bilberry", "blackberry", "blood orange", "blueberry", "cantaloupe", "chili pepper", "cloudberry", "elderberry", "lime", "lychee", "mulberry", "olive", "salal berry")
+
+```{r}
+fruits <- '[1] "bell pepper"  "bilberry"     "blackberry"   "blood orange"
+
+[5] "blueberry"    "cantaloupe"   "chili pepper" "cloudberry"  
+
+[9] "elderberry"   "lime"         "lychee"       "mulberry"    
+
+[13] "olive"        "salal berry"'
+
+fruits <- str_extract_all( fruits, '\"[a-z]*\\s*[a-z]*\\"')
+
+fruits <- unlist(fruits)
+
+fruits
+
+writeLines(fruits)
+
+
+```
+
+
+
+The two exercises below are taken from R for Data Science, 14.3.5.1 in the on-line version:
+
+
+### Problem 3
+
+Describe, in words, what these expressions will match:
+
+* (.)\1\1
+  + Any character that is the same would be repeated 3 times
+* "(.)(.)\\2\\1"
+  + A string with a symmetric pattern `abba`. There are two characters followed by the second character and then the first character
+* (..)\1
+  + A pair of characters that is repeated once such as `abab`
+* "(.).\\1.\\1"
+  + It is a string of 5 characters with any character, which is the original, followed by any character, the original, any character, and the original such as `abaca`
+* "(.)(.)(.).*\\3\\2\\1"
+  + It is a group of three various characters followed by zero or more other characters, then the third character, second character, and first character such as `abcdefcba` or `abccba`
+  
+```{r}
+teststring <- c("aaah", "noon", "mama", "rarer", "racecar")
+# 3.a
+str_view(teststring, "(.)\\1\\1")
+# 3.b
+str_view(teststring, "(.)(.)\\2\\1")
+# 3.c
+str_view(teststring, "(..)\\1")
+# 3.d
+str_view(teststring, "(.).\\1.\\1")
+# 3.e
+str_view(teststring, "(.)(.)(.).*\\3\\2\\1")
+
+```
+  
+
+### Problem 4
+
+Construct regular expressions to match words that:
+
+* Start and end with the same character.
+  + `"^(.).*\\1$"`
+* Contain a repeated pair of letters (e.g. "church" contains "ch" repeated twice.)
+  + `"(..).*\\1"`
+  + Alternatively, `"([a-z][a-z]).*\\1"` to specify characters are letters
+* Contain one letter repeated in at least three places (e.g. "eleven" contains three "e"s.)
+  + `"(.).*\\1.*\\1"`
+  + Alternatively, `"([a-z]).*\\1.*\\1"` to specify characters are letters
+  
+```{r}
+teststring2 <- c("Mississippi", "noon", "mama", "rarer", "racecar")
+# 4.a
+str_view(teststring2, "^(.).*\\1$")
+# 4.b
+str_view(teststring2, "(..).*\\1")
+# 4.c
+str_view(teststring2, "(.).*\\1.*\\1")
+```
+
+
+  
+  
