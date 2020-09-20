@@ -1,0 +1,131 @@
+---
+title: "Project 1: Data Analysis: Chess Tournament"
+author: "Orli Khaimova"
+date: "9/19/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+### Reading the Data
+```{r}
+URL <- "https://raw.githubusercontent.com/okhaimova/DATA-607/master/Project1/tournamentinfo"
+tournamenttemp <- read.csv(URL, header = FALSE, sep = "|")
+```
+
+### Cleaning up the Data
+
+After reading the data, we have to clean it up. I removed the dashes and then separated the data into two separate data frames. One consists of the pair number, player name, total points, and rounds. The second consists of the state, USCF ID, pre-rating, post-rating, and more round information. They are labeled `odd` and `even` respectively. I also split the variables further in order to analyze it and made some variables of the numeric class.
+```{r}
+#removing the lines with dashes
+tournamenttemp <- tournamenttemp[!grepl("---", tournamenttemp[ ,1]), ]
+
+#removing the first 2 columns
+tournamenttemp <- tournamenttemp[-c(1:2), ]
+
+#removing V11 column
+tournamenttemp <- tournamenttemp[ ,-c(11)]
+
+#splitting data frame into two
+odd <- tournamenttemp[seq(1, nrow(tournamenttemp), 2), ]
+even <- tournamenttemp[seq(2, nrow(tournamenttemp), 2), ]
+
+#renaming variables in odd
+colnames(odd) <- c("pair", "name", "points", 1:7)
+
+#clean up the even data frame
+#removing + renaming variables
+even <- even[ ,-c(3:10)]
+even <- rename(even, "state" = "V1")
+
+#splitting columns
+even <- separate(even, 2, c("uscfID", "rating" ), "/")
+even <- separate(even, "rating", c("pre-rating", "post-rating"), "->")
+
+#cleaning the ratings to make it numeric 
+even$`pre-rating` <- str_extract(even$`pre-rating`, "\\d+\\d")
+even$`post-rating` <- str_extract(even$`post-rating`, "\\d+\\d")
+
+#combining data frames
+tournament <- cbind(odd, even)
+
+#cleaning up the data to make it numeric
+tournament$pair <- unlist(str_extract_all(tournament$pair, "\\d+"))
+tournament$points <- unlist(str_extract_all(tournament$points, "\\d.\\d"))
+
+#changing class
+tournament$`pre-rating` <- as.numeric(tournament$`pre-rating`)
+tournament$points <- round(as.double(tournament$points), 2)
+```
+
+To extract the pair numbers from the rounds variables in order to match it to the opponents' pre-rating, I converted it to a matrix. I then applied a for loop which took each value in the matrix and replaced it with the opponents' pre-ratings. Afterwards, I made it numeric.
+```{r}
+#assigning the round columns its own variable
+rounds <- tournament[4:10]
+
+#extracting the digits from the round columns, putting and putting it in a matrix
+test <- matrix(str_extract(unlist(rounds), "\\d+"), ncol = 7)
+
+#for loop
+#it goes through the `test` matrix and replaces the values with the opponents' pre-rating
+for (row in 1:nrow(test))
+{
+  for (col in 1:ncol(test))
+  {
+    i <- test[row, col]
+    
+    if(!is.na(i))
+    {
+      test[row, col] <- tournament$`pre-rating`[tournament$pair == i]
+    }
+  }
+}
+
+#changing the character matrix into numeric
+class(test) <- "numeric"
+
+#assigning the `test` matrix back into the `rounds` data frame
+rounds <- test
+```
+
+### Calculations
+
+I then calculated the average of the opponent's pre-ratings for each player and removed the `NA` values for it to only be effective for the amount of rounds they played.
+```{r}
+#calculating the average of the opponents' pre-ratings
+tournament$avg <- round(rowMeans(rounds, na.rm = TRUE))
+```
+
+### Output
+
+I then created a `toutput` with only the `name`, `state`, `points`, `pre-rating`, and `avg` variables. Afterwards, it generates a CSV file with only the `toutput` data.
+```{r}
+#reordering columns and creating output data frame
+toutput <- tournament[c("name", "state", "points", "pre-rating", "avg")]
+
+head(toutput)
+
+#creating csv file
+write.csv(toutput, "tournament", row.names = FALSE)
+```
+
+### Calculating the players' expected scores
+
+Using the ELO calculation, I determined each player’s expected result (number of points),
+based on his or her pre-tournament rating, and the average pre-tournament rating for all of the
+player’s opponents. I was able to find their probability of winning and then multiplied it by the amount of rounds they played. By doing so, I was able to calculate their expected number of points.
+```{r}
+toutput$win_prob <- round((1 / (1 + 10 ^ ((toutput$avg - toutput$`pre-rating`) / 400))), 4)
+
+toutput$predicted_score <- round(toutput$win_prob * rowSums(!is.na(rounds)), 4)
+
+toutput$diff <- round(abs(toutput$points - toutput$predicted_score), 4)
+
+head(toutput[order(toutput$diff),], 5)  
+```
+### Analysis of Expected Scores
+
+According to the calculations, Michael J Martin scored the most points relative to his expected result, followed by Hansen Song, and Bradley Shaw. 
