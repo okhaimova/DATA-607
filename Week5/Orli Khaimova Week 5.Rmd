@@ -1,0 +1,95 @@
+---
+title: "Week 5"
+author: "Orli Khaimova"
+date: "9/26/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### Loading Libraries
+```{r}
+library(tidyverse)
+```
+
+### Reading the Data
+```{r}
+URL <- "https://raw.githubusercontent.com/okhaimova/DATA-607/master/Week5/W5data.csv"
+delays <- read.csv(URL)
+
+# could alternatively do na.omit(read.csv(URL)) to remove NA values
+
+#Untidy Data
+delays
+```
+
+### Tidying the Data
+
+First, I deleted the row with just `NA` values. Then I replaced the blank cells with `NA` values so that they can be filled with the appropriate name. Then, I grouped the city columns into a `destination` column and made a `count` column. Afterwards, I renamed the columns and separated the `on time` and `delayed` into two different columns.
+```{r}
+# deleting the 3rd row with NA values
+delays <- delays[-c(3), ]
+
+# replacing blank cells with NA
+delays[delays == ""] <- NA
+
+# fill the NA cells in the X column and then change to a longer table
+# renaming variables and separating the status variable
+delays <- delays %>% 
+  fill(X) %>% 
+  pivot_longer(Los.Angeles:Seattle, names_to = "destination", values_to = "count") %>%
+  rename("airline" = "X", "status" = "X.1") %>%
+  pivot_wider(names_from = status, values_from = count)
+
+# removing the period from the destination names
+delays$destination <- str_replace(delays$destination, "\\.","\\ ")
+
+```
+
+### Analysis
+
+I made an extra column that show the proportion of flights that were on time for each city and airline. I then found how many flights were on time and delayed for each airline.
+```{r warnings = FALSE}
+delays <- delays %>%
+  mutate(ontimeprop = round(`on time` / (delayed + `on time`) * 100, 2))
+
+delays
+
+summarystatairline <- delays %>% 
+  group_by(airline) %>%
+  summarise(totalontime = sum(`on time`),
+            totaldelayed = sum (delayed),
+            proportion = round (totalontime / (totaldelayed + totalontime) * 100, 2))
+
+summarystatairline
+
+summarystatdest <- delays %>% 
+  group_by(destination) %>%
+  summarise(totalontime = sum(`on time`),
+            totaldelayed = sum (delayed),
+            proportion = round (totalontime / (totaldelayed + totalontime) * 100, 2))
+
+summarystatdest
+
+ggplot(summarystatairline, aes(x = airline, y = proportion, fill = airline)) + 
+  geom_bar(stat = "identity") + 
+  ggtitle("Overall On time Comparison")
+
+ggplot(delays, aes(x = airline, y = `on time`, fill = airline)) + 
+  geom_bar(stat = "identity") + 
+  ggtitle("On time Comparison between Cities") +
+  ylab("On Time Count") +
+  facet_wrap(~destination)
+
+ggplot(delays, aes(x = airline, y = ontimeprop, fill = airline)) + 
+  geom_bar(stat = "identity") + 
+  ggtitle("On time Comparison between Cities Percentage") +
+  ylab("Percentage On Time") +
+  facet_wrap(~destination)
+```
+
+### Conclusion
+AM West seems to have the higher proportion of on time flights. However, when comparing the values side by side for each city, Alaskan Airlines seems to make more on-time flights proportionally, but AM West makes more flights. Alaskan Airline flights to Phoenix have the highest proportion of on time flights and flights to San Francisco via AM West have the lowest proportion of on time flights. Overall, Phoenix had the highest on-time flights ratio and San Francisco had the lowest.
