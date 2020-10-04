@@ -1,0 +1,253 @@
+---
+title: "Project 2"
+author: "Orli Khaimova"
+date: "10/3/2020"
+output: html_document
+---
+
+---
+title: "Project 2"
+author: "Orli Khaimova"
+date: "10/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(magrittr)
+```
+
+## Income vs Religion {.tabset}
+
+### Task
+
+An analysis that could be performed is once the data is 'tidy' we can see the columns as 'religion', 'income' then 'frequency', with each row being an entry(unique) to that person or entry point. We can then grab this data and analyze mathematically amounts, averages, etc"
+
+### Reading Data
+
+This data can also be found in the `tidyr` package under the name `relig_income` which includes more income ranges and respondents who did not want to answer information about their icnome.
+```{r}
+religion <- read.csv("https://raw.githubusercontent.com/okhaimova/DATA-607/master/Project2/income%20and%20religion.csv")
+```
+
+### Tidying the Data
+To tidy the data, I removed unnecessary variables, changed the names, and then changed the wide data set into a longer data set by grouping the income levels as the `income` variable and assigned the values to `frequency`. Then I changed the `income` into a factor and ordered the levels.
+```{r}
+religion <- religion %>%
+  select(-X) %>%
+  set_colnames(c("religion", "<$10k","$10-20k", "$20-30k", "$30-40k", "$40-50k", "$50-75k")) %>%
+  pivot_longer(2:7, names_to = "income", values_to = "frequency")
+
+# factoring the income variable
+religion$income <- religion$income %>%
+  as.factor() %>%
+  relevel("<$10k")
+
+head(religion)
+```
+
+### Calculations and Graphs
+
+I found the proportion of people that are in each income group based on their religion. I then made a bar graph to show the proportions of income levels for each religious group. I also found the average for each income group which may be skewed as certain groups had larger frequencies and we do not know if it is proportionate to the population.I also found the largest income group for each religion. Lastly, I tried to find the income group for each religious group which holds the median value. To determine the median, I divided the total amount of people for each religious group by 2 and then found the cumulative sum of the income levels. Next, I found the income group that contains the median value by comparing it to its cumulative sum. 
+```{r}
+# finding the proportion of each income for each religion
+religion <- religion %>%
+  group_by(religion) %>%
+  mutate(count = sum(frequency)) %>%
+  group_by(religion, income) %>%
+  mutate(proportion = frequency / count,
+         label = round(proportion * 100, 2))
+
+# bar graph of the proportions
+ggplot(religion) + 
+  geom_bar(aes(x = religion, y = proportion, fill = income), stat = "identity", 
+           position = position_fill(reverse = TRUE)) +
+  geom_text(aes(x = religion, y = proportion, label = label, group = income),
+            position = position_stack(vjust = .5, reverse = TRUE), size = 3) +
+  coord_flip() +
+  ggtitle("Distribution of Income Levels per Religions")
+
+# finding the average of each income group
+religion %>%
+  group_by(income) %>%
+  summarise(average = mean(frequency)) %>%
+  arrange(desc(average))
+
+# finding the biggest income group for each religion
+religion %>%
+  group_by(religion) %>%
+  select(-label, - count) %>%
+  mutate(max = max(proportion)) %>%
+  filter(proportion == max) %>%
+  select(-max) %>%
+  arrange(desc(proportion))
+
+# finding the median value
+religion %>%
+  group_by(religion) %>%
+  select(-label, - proportion) %>%
+  mutate(median = count / 2,
+         sum = cumsum(frequency)) %>%
+  select(-count, -frequency) %>%
+  filter(sum >= median) %>%
+  mutate(minsum = min(sum)) %>%
+  filter(minsum == sum) %>%
+  select(-minsum) %>%
+  arrange(desc(income))
+```
+### Analysis
+
+Based on the graph and chart, the largest income group for every religion group is \$50-75k except for Historically Black Protestant who mostly fall in the \$10-20k group. It is also interesting to note that the proportion of those who fall in the \$50-75k income group for Hindu and Jewish is over 40% while for Evangelical Protestant, Catholic, and Buddhist groups, that proprtion is only around a quarter. It is also evident collectively, the largest income group is \$50-75k followed by \$20-30k. 
+
+Since income is not normally distributed, it would be better to look at the median instead of the average. I was also able to find the median income group for each religious group. To do so, I had to find what the median frequency value for each group and then found the cumulative sum of the frequency for each income group. Once the median value was greater than the cumulative sum, it meant that the median value would fall into that income group. Majority of the religious group fell into the \$30-45k income for its median value, except for Agnostic, Hindu, and Jewish who fell into the \$40-50k income for its median group and Historically Black Protestants who fell into the \$20-30k income for its median group.
+
+
+## Students Performance in Exams {.tabset}
+
+
+### Task
+
+Find if there is a correlation between students performance and parental level of education.
+
+### Reading the Data
+
+```{r}
+exams <- read.csv("https://raw.githubusercontent.com/okhaimova/DATA-607/master/Project2/StudentsPerformance.csv")
+```
+
+
+### Tidying the Data
+
+First, I removed some variables as we are only interested in the students performance and parental level of education. Then I renamed the columns and made the data set longer by assigning the the subject variables to `subject` and the values to `score`. Then I changed the `parental_edu` variable into a factor variable and ordered the levels accordingly.
+```{r}
+exams <- exams %>%
+  select(parental.level.of.education, math.score, reading.score, writing.score) %>%
+  set_colnames(c("parental_edu", "math","reading", "writing")) %>%
+  pivot_longer(2:4, names_to = "subject", values_to = "score")
+
+# factoring the parents' levels of education
+exams$parental_edu <- exams$parental_edu %>%
+  as.factor() %>%
+  factor(c("some high school", "high school", "some college", 
+           "associate's degree", "bachelor's degree", "master's degree"))
+
+head(exams)
+```
+
+
+### Calculations and Graphs
+
+```{r}
+# Overall average score comparison for each parental level
+exams %>%
+  group_by(parental_edu) %>%
+  summarise(average = mean(score))
+
+# Average score comparison for each parental level and subject
+exams %>%
+  group_by(parental_edu, subject) %>%
+  summarise(average = mean(score)) %>%
+  pivot_wider(names_from = subject, values_from = average)
+
+# Standard Deviation for each parental level and subject
+exams %>%
+  group_by(parental_edu, subject) %>%
+  summarise(sd = sd(score)) %>%
+  pivot_wider(names_from = subject, values_from = sd)
+
+#Scatterplot
+ggplot(exams, aes(x = parental_edu, y = score)) + 
+  geom_point(aes(color = subject)) +
+  coord_flip()
+
+# histogram of each distribution
+ggplot(exams) +
+  geom_histogram(aes(x = score, fill = subject)) +
+  facet_grid(parental_edu ~ subject) +
+  ggtitle("Distributions of Scores")
+
+# box plots for each distribution
+ggplot(exams, aes(x = parental_edu, y = score, color = subject)) +
+  geom_boxplot() +
+  facet_wrap(~subject) +
+  coord_flip() +
+  ggtitle("Distributions of Scores")
+```
+
+
+### Analysis
+
+When looking at the average score across all three tests, we can see there is some correlation between the parental level of education and scores. As the level of education increases, the average overall test score increase as well except between the levels of `some high school` and `high school`. 
+
+The same can be seen when we look at the average of scores separately for each subject. There is the same correlation that as level of education increases, so does the average test score except between `some high school` and `high school`.
+
+When looking at the scatterplot, we can see that the range of scores seem to decrease as the parental level of education increases. This shows that there is a correlation between scores and parental level of education. It also can be seen that for students whose parents have `some high school` education, the scores vary the greatest as they have the highest standard deviation and students whose parents have completed a `master's degree`, their standard deviations are the smallest for reading and writing, but not for math, meaning they have a larger variation for math scores.
+
+The distributions can be further seen for each level of parental education and subject in the histograms and box plots. It can be said, generally, that there is a correlation between the two. As the parental level of education rises, the range of scores decrease and the average score increase, with a small discrepancy between `some high school` and `high school`.
+
+## MTA ridership {.tabset}
+
+### Task
+
+An example of analysis that can be done is the change in ridership per borough from one year to the next. 
+
+### Reading the Data
+
+```{r}
+mta <- read.csv("https://raw.githubusercontent.com/okhaimova/DATA-607/master/Project2/MTA%20ridership.csv")
+```
+
+
+### Tidying the Data
+
+First, I removed some variables and only kept the names of the boroughs and the ridership for each year. Afterwards, I grouped the years into the `year` variable and the values into `ridership`. Then I factored the variables and made the `ridership` variable numeric.
+```{r}
+mta <- mta %>%
+  select(2:8) %>%
+  set_colnames(c("borough", "2013", "2014", "2015", "2016", "2017", "2018")) %>%
+  pivot_longer(2:7, names_to = "year", values_to = "ridership")
+
+# factoring the years and boroughs and making ridership numeric
+mta$year <- as.factor(mta$year)
+mta$borough <- as.factor(mta$borough)
+mta$ridership <- as.numeric(gsub(",", "", mta$ridership))
+
+head(mta)
+```
+
+
+### Calculations and Graphs
+
+```{r, warning = FALSE}
+# Overall average ridership by year
+annual <- mta %>%
+  group_by(year) %>%
+  summarise(average = mean(ridership))
+annual
+
+ggplot(annual, aes(x=year, y=average, group=1)) +
+  geom_line()+
+  geom_point() +
+  ylab("Average Annual Ridership") +
+  ggtitle("Average Annual Ridership Over Time")
+
+# Average ridership each borough
+boroughannual <- mta %>%
+  group_by(borough, year) %>%
+  summarise(average = mean(ridership)) 
+boroughannual %>%
+  pivot_wider(names_from = year, values_from = average)
+
+ggplot(boroughannual, aes(x=year, y=average, group = borough, color = borough)) +
+  geom_line()+
+  geom_point() +
+  ylab("Average Annual Ridership") +
+  ggtitle("Average Annual Ridership Over Time by Borough")
+
+```
+
+
+### Analysis
+Overall, it can be seen that the average annual ridership over time increased and then decreased after 2015. It is also evident that ridership for each borough increased and then decreased.
+
