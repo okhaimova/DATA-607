@@ -1,0 +1,26 @@
+[
+  {
+    "Title": "Data Science for Business: What You Need to Know about Data Mining and Data-Analytic Thinking",
+		"Authors": "Foster Provost, Tom Fawcett",
+		"Publisher": "O'Reilly Media, Inc.",
+		"Year": "2013",
+    "Pages": "414",
+		"ISBN": "978-1449361327"
+  },
+  {
+    "Title": "Automated Data Collection with R: A Practical Guide to Web Scraping and Text Mining",
+		"Authors": "Simon Munzert, Christian Rubba, Peter Meißner, Dominic Nyhuis",
+		"Publisher": "Wiley",
+		"Year": "2015",
+    "Pages": "474",
+		"ISBN": "978-1118834817"
+  },
+  {
+    "Title": "Customers who viewed R for Data Science: Import, Tidy, Transform, Visualize, and Model Data",
+		"Authors": "Hadley Wickham, Garrett Grolemund",
+		"Publisher": "O'Reilly Media, Inc.",
+		"Year": "2017",
+    "Pages": "520",
+		"ISBN": "978-1491910399"
+  }
+]
