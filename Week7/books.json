@@ -4,7 +4,7 @@
 		"Authors": "Foster Provost, Tom Fawcett",
 		"Publisher": "O'Reilly Media, Inc.",
 		"Year": "2013",
-    "Pages": "414",
+    		"Pages": "414",
 		"ISBN": "978-1449361327"
   },
   {
@@ -12,7 +12,7 @@
 		"Authors": "Simon Munzert, Christian Rubba, Peter Meißner, Dominic Nyhuis",
 		"Publisher": "Wiley",
 		"Year": "2015",
-    "Pages": "474",
+    		"Pages": "474",
 		"ISBN": "978-1118834817"
   },
   {
@@ -20,7 +20,7 @@
 		"Authors": "Hadley Wickham, Garrett Grolemund",
 		"Publisher": "O'Reilly Media, Inc.",
 		"Year": "2017",
-    "Pages": "520",
+    		"Pages": "520",
 		"ISBN": "978-1491910399"
   }
 ]
