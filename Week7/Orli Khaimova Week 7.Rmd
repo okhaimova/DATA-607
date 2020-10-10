@@ -20,11 +20,13 @@ library(RJSONIO)
 
 ### Task Description
 
-Separately create three files which store the book’s information in HTML , XML, and JSON formats containing book information and include the title, authors, and two or three other attributes that you find interesting. With R and using any packages, load information from the three sources into separate data frames. Check if all three are identical.
+Separately create three files which store the book’s information in HTML , XML, and JSON formats containing book information and include the title, authors, and two or three
+other attributes that you find interesting. With R and using any packages, load information from the three sources into separate data frames. Check if all three are identical.
 
 ### Overview of Approach
 
-I created each file by hand and uploaded it to *Github* so that it can be read and reproduced. I then converted each one into a data frame. Lastly, I compared to see if they were identical. 
+I created each file by hand and uploaded it to *Github* so that it can be read and reproduced. I then converted each one into a data frame. Lastly, I compared to see if they
+were identical. 
 
 
 ### Results{.tabset}
@@ -49,7 +51,8 @@ kable(books_xml)
 ```
 #### JSON
 
-Note: I had to remove row names and also replace a string of characters as one author has a German letter in their name. However, if there is unicode data in the file, you can just include `encoding = "UTF-8"` when loading data. I also trasposed the data frame.
+Note: I had to remove row names and also replace a string of characters as one author has a German letter in their name. However, if there is unicode data in the file, you can
+just include `encoding = "UTF-8"` when loading data. I also trasposed the data frame.
 
 ```{r JSON}
 books_json <- fromJSON("https://raw.githubusercontent.com/okhaimova/DATA-607/master/Week7/books.json", encoding = "UTF-8") %>%
