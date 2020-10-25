@@ -1,0 +1,76 @@
+---
+title: "Orli Khaimova Week 9"
+author: "Orli Khaimova"
+date: "10/24/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(magrittr)
+library(tidyverse)
+library(httr)
+library(jsonlite)
+library(knitr)
+```
+
+
+### Description
+
+Your task is to choose one of the New York Times APIs, construct an interface in R to read in the JSON data, and transform it into an R DataFrame.
+
+### Current best sellers lists for hardcover fiction books
+
+I pulled data from a list of the current hardcover fiction book and transformed it into an R Data Frame. Since the data frame was large, I only included a glimpse of it.
+
+```{r}
+#data frame for hardcover fiction books
+fiction <- fromJSON("https://api.nytimes.com/svc/books/v3/lists/current/hardcover-fiction.json?api-key=jl72XOQZLZ2FAL1K0h054QyKHUA2Xizm") %>%
+  with(results) %>%
+  with(books) %>%
+  as.data.frame()
+
+glimpse(fiction)
+```
+
+### Finding best seller lists for other types of books
+
+There is a list that we can grab that includes the types of books which each have their own list of best selling books. Hardcover fiction was only one type. You can insert the encoded list name into the url and run it through a for loop to create a data frame for each. 
+
+```{r, eval = FALSE}
+#creating a data frame with lists
+list_name_encoded <- fromJSON("https://api.nytimes.com/svc/books/v3/lists/names.json?api-key=jl72XOQZLZ2FAL1K0h054QyKHUA2Xizm") %>%
+  with(results) %>%
+  select(list_name_encoded) %>%
+  as.data.frame()
+
+a <- "https://api.nytimes.com/svc/books/v3/lists/current/"
+b <- ".json?api-key=jl72XOQZLZ2FAL1K0h054QyKHUA2Xizm"
+
+#creating urls
+list_name_encoded <- list_name_encoded %>%
+  mutate(list_name_encoded = paste0(a,list_name_encoded,b)) %>%
+  pull()
+
+list_name_encoded <- list_name_encoded %>%
+  as.list()
+
+j=1
+
+for loop to create a data frame for each list
+for(i in 1:length(list_name_encoded)){
+list_name_encoded[[j]]= fromJSON(list_name_encoded[[j]]) %>%
+  with(results) %>%
+  with(books) %>%
+  as.data.frame()
+Sys.sleep(5)
+j=j+1
+}
+```
+
+
+### Conclusion
+
+Finding the list for best-selling hardcover fiction books and transforming it ran quickly. However, running the for loop to create a data frame for each list takes a while to run.
+
+
